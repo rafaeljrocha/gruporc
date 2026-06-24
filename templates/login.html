@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SISRITHA — Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body class="pagina-login">
+  <div class="caixa-login">
+    <div class="titulo">SISRITHA</div>
+
+    {% if erro %}
+      <div class="alerta alerta-erro">{{ erro }}</div>
+    {% endif %}
+
+    {% if etapa_2fa %}
+      <form method="post" action="{{ url_for('auth.duplo_fator') }}">
+        {% if primeiro_acesso %}
+          <p>Primeiro acesso: escaneie o QR Code abaixo com seu app de autenticação (Google Authenticator, Authy, etc.) e informe o código gerado.</p>
+          {% if qr_base64 %}
+            <div style="text-align:center; margin-bottom:1rem;">
+              <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code 2FA" style="max-width:220px;">
+            </div>
+          {% endif %}
+        {% else %}
+          <p>Informe o código do seu aplicativo de autenticação.</p>
+        {% endif %}
+        <div class="campo">
+          <label for="codigo">Código de verificação</label>
+          <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" required autofocus>
+        </div>
+        <button type="submit" class="botao" style="width:100%;">Confirmar</button>
+      </form>
+    {% else %}
+      <form method="post" action="{{ url_for('auth.login') }}">
+        <div class="campo">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autofocus>
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required>
+        </div>
+        <button type="submit" class="botao" style="width:100%;">Entrar</button>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

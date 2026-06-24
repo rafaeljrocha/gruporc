@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}SISRITHA — Módulos{% endblock %}
+{% block conteudo %}
+  <h2>Selecione um módulo</h2>
+  <div class="grade-cards">
+    {% for modulo in modulos %}
+      {% if modulo.habilitado %}
+        <a class="card-modulo habilitado" href="{{ url_for('paginas.' + modulo.slug) if modulo.slug == 'secretariado' else '#' }}">
+          <h3>{{ modulo.nome }}</h3>
+        </a>
+      {% else %}
+        <div class="card-modulo bloqueado">
+          <h3>{{ modulo.nome }}</h3>
+          <small>Sem acesso</small>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endblock %}

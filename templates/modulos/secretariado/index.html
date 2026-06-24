@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block titulo %}Secretariado Executivo — SISRITHA{% endblock %}
+
+{% block nav_modulos %}
+  <a href="{{ url_for('paginas.home') }}">Início</a>
+  <a class="ativo" href="{{ url_for('paginas.secretariado') }}">Secretariado</a>
+{% endblock %}
+
+{% block conteudo %}
+<h2>Secretariado Executivo</h2>
+<div id="mensagem-global" class="alerta" style="display:none;"></div>
+
+<div class="abas-nav" id="abas-nav">
+  <button data-aba="cadastro" class="ativa">Cadastro</button>
+  <button data-aba="saude">Saúde</button>
+  <button data-aba="recibos">Recibos e Reembolsos</button>
+  <button data-aba="viagens">Viagens</button>
+  <button data-aba="despesas">Despesas</button>
+  <button data-aba="fornecedores">Fornecedores</button>
+  {% if session.get('papel') == 'master' %}
+  <button data-aba="configuracoes">Configurações</button>
+  {% endif %}
+</div>
+
+<!-- ABA CADASTRO -->
+<section class="aba-conteudo ativa" id="aba-cadastro">
+  <div class="barra-acoes">
+    <h3>Integrantes Familiares</h3>
+    <button class="botao" onclick="abrirModalIntegrante()">+ Novo Integrante</button>
+  </div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>Nascimento</th><th>CPF</th><th>Passaporte</th><th>Convênio</th><th></th></tr></thead>
+    <tbody id="tabela-integrantes"></tbody>
+  </table>
+
+  <div class="barra-acoes" style="margin-top:2rem;">
+    <h3>Carteira Digital</h3>
+    <div>
+      <select id="select-integrante-carteira" onchange="carregarDocumentos()"></select>
+      <button class="botao" onclick="abrirModalDocumento()">+ Adicionar Documento</button>
+    </div>
+  </div>
+  <table class="tabela-dados">
+    <thead><tr><th>Tipo</th><th>Descrição</th><th>Validade</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-documentos"></tbody>
+  </table>
+</section>
+
+<!-- ABA SAUDE -->
+<section class="aba-conteudo" id="aba-saude">
+  <h3>Saúde Familiar</h3>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th></th></tr></thead>
+    <tbody id="tabela-saude-integrantes"></tbody>
+  </table>
+
+  <div id="painel-saude-detalhe" style="display:none; margin-top:1.5rem;">
+    <h4 id="titulo-saude-integrante"></h4>
+    <div class="abas-nav" id="subabas-saude">
+      <button data-subaba="prontuario" class="ativa">Prontuário</button>
+      <button data-subaba="medicamentos">Medicamentos</button>
+      <button data-subaba="consultas">Consultas</button>
+      <button data-subaba="exames">Exames</button>
+      <button data-subaba="receitas">Receitas Médicas</button>
+    </div>
+
+    <div class="aba-conteudo ativa" id="subaba-prontuario">
+      <form id="form-prontuario" onsubmit="salvarProntuario(event)">
+        <div class="campo"><label>Altura (cm)</label><input type="number" step="0.1" name="altura_cm"></div>
+        <div class="campo"><label>Peso (kg)</label><input type="number" step="0.1" name="peso_kg"></div>
+        <div class="campo"><label>Tipo Sanguíneo</label><input type="text" name="tipo_sanguineo"></div>
+        <div class="campo"><label>Calçado</label><input type="text" name="calcado"></div>
+        <div class="campo"><label>Tamanho Calça</label><input type="text" name="tamanho_calca"></div>
+        <div class="campo"><label>Tamanho Camiseta</label><input type="text" name="tamanho_camiseta"></div>
+        <div class="campo"><label>Tamanho Camisa</label><input type="text" name="tamanho_camisa"></div>
+        <div class="campo"><label>Medida Cintura</label><input type="number" step="0.1" name="medida_cintura"></div>
+        <div class="campo"><label>Medida Ombro</label><input type="number" step="0.1" name="medida_ombro"></div>
+        <button type="submit" class="botao">Salvar Prontuário</button>
+        <small id="ultima-atualizacao-prontuario"></small>
+      </form>
+    </div>
+
+    <div class="aba-conteudo" id="subaba-medicamentos">
+      <div class="barra-acoes"><span></span><button class="botao" onclick="abrirModalMedicamento()">+ Novo Medicamento</button></div>
+      <table class="tabela-dados">
+        <thead><tr><th>Nome</th><th>Princípio Ativo</th><th>Dosagem</th><th>Horários</th><th>Status</th><th></th></tr></thead>
+        <tbody id="tabela-medicamentos"></tbody>
+      </table>
+    </div>
+
+    <div class="aba-conteudo" id="subaba-consultas">
+      <div class="barra-acoes"><span></span><button class="botao" onclick="abrirModalConsulta()">+ Nova Consulta</button></div>
+      <table class="tabela-dados">
+        <thead><tr><th>Médico</th><th>Especialidade</th><th>Data</th><th>Horário</th><th>Status</th><th></th></tr></thead>
+        <tbody id="tabela-consultas"></tbody>
+      </table>
+    </div>
+
+    <div class="aba-conteudo" id="subaba-exames">
+      <div class="barra-acoes"><span></span><button class="botao" onclick="abrirModalExame()">+ Novo Exame</button></div>
+      <table class="tabela-dados">
+        <thead><tr><th>Solicitante</th><th>Finalidade</th><th>Coleta</th><th>Laboratório</th><th>Status</th><th></th></tr></thead>
+        <tbody id="tabela-exames"></tbody>
+      </table>
+    </div>
+
+    <div class="aba-conteudo" id="subaba-receitas">
+      <div class="barra-acoes"><span></span><button class="botao" onclick="abrirModalReceita()">+ Nova Receita</button></div>
+      <table class="tabela-dados">
+        <thead><tr><th>Médico</th><th>Especialidade</th><th>Finalidade</th><th>Data</th><th>Arquivo</th><th></th></tr></thead>
+        <tbody id="tabela-receitas"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ABA RECIBOS -->
+<section class="aba-conteudo" id="aba-recibos">
+  <div class="barra-acoes"><h3>Recibos</h3><button class="botao" onclick="abrirModalRecibo()">+ Novo Recibo</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Emitente</th><th>Data</th><th>Valor</th><th>Integrante</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-recibos"></tbody>
+  </table>
+
+  <div class="barra-acoes" style="margin-top:2rem;"><h3>Reembolsos</h3><button class="botao" onclick="abrirModalReembolso()">+ Novo Pedido de Reembolso</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Data Pedido</th><th>Integrante</th><th>Valor Solicitado</th><th>Status</th><th>Pagamento</th><th>Valor Pago</th><th></th></tr></thead>
+    <tbody id="tabela-reembolsos"></tbody>
+  </table>
+</section>
+
+<!-- ABA VIAGENS -->
+<section class="aba-conteudo" id="aba-viagens">
+  <div class="barra-acoes"><h3>Viagens</h3><button class="botao" onclick="abrirModalViagem()">+ Nova Viagem</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Destino</th><th>Ida</th><th>Volta</th><th>Status</th><th>Passageiros</th><th>Valor</th><th></th></tr></thead>
+    <tbody id="tabela-viagens"></tbody>
+  </table>
+</section>
+
+<!-- ABA DESPESAS -->
+<section class="aba-conteudo" id="aba-despesas">
+  <div class="barra-acoes">
+    <h3>Despesas</h3>
+    <div><span class="total-destaque" id="total-despesas">R$ 0,00</span> &nbsp;
+    <button class="botao" onclick="abrirModalDespesa()">+ Nova Despesa</button></div>
+  </div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nº</th><th>Fornecedor</th><th>Valor</th><th>Serviço</th><th>Vencimento</th><th>Modo</th><th>Integrante</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tabela-despesas"></tbody>
+  </table>
+</section>
+
+<!-- ABA FORNECEDORES -->
+<section class="aba-conteudo" id="aba-fornecedores">
+  <div class="barra-acoes"><h3>Fornecedores</h3><button class="botao" onclick="abrirModalFornecedor()">+ Novo Fornecedor</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>Telefone</th><th>Email</th><th>Categoria</th><th>Chave Pix</th><th>Ativo</th><th></th></tr></thead>
+    <tbody id="tabela-fornecedores"></tbody>
+  </table>
+</section>
+
+{% if session.get('papel') == 'master' %}
+<!-- ABA CONFIGURACOES -->
+<section class="aba-conteudo" id="aba-configuracoes">
+  <h3>Configurações do Módulo</h3>
+  <form id="form-configuracoes" onsubmit="salvarConfiguracoes(event)">
+    <div class="campo"><label>Nome do Módulo</label><input type="text" name="nome"></div>
+    <div class="campo"><label>Responsável</label><input type="text" name="responsavel"></div>
+    <div class="campo"><label>Email de Contato</label><input type="email" name="email_contato"></div>
+    <div class="campo"><label>Telefone de Contato</label><input type="text" name="telefone_contato"></div>
+    <div class="campo"><label>Logo do Módulo</label><input type="file" name="logo" accept=".png,.jpg,.jpeg"></div>
+    <div class="campo"><label>URL Webhook N8N</label><input type="text" name="webhook_n8n_url"></div>
+    <button type="submit" class="botao">Salvar Configurações</button>
+  </form>
+</section>
+{% endif %}
+
+{% include "modulos/secretariado/_modais.html" %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/secretariado.js') }}"></script>
+{% endblock %}

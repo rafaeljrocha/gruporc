@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo %}SISRITHA{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+  {% block estilos_extra %}{% endblock %}
+</head>
+<body>
+  <header class="topo">
+    <div class="logo-area">SISRITHA</div>
+    <nav class="modulos-nav">
+      {% block nav_modulos %}{% endblock %}
+    </nav>
+    <div class="usuario-area">
+      <span>{{ session.get('usuario_nome', '') }}</span>
+      <a class="botao-sair" href="{{ url_for('auth.logout') }}">Sair</a>
+    </div>
+  </header>
+  <main class="container">
+    {% block conteudo %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/comum.js') }}"></script>
+  {% block scripts_extra %}{% endblock %}
+</body>
+</html>
