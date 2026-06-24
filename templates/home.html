@@ -15,5 +15,11 @@
         </div>
       {% endif %}
     {% endfor %}
+    {% if papel == 'master' %}
+      <a class="card-modulo habilitado card-config" href="{{ url_for('paginas.configuracoes') }}">
+        <h3>⚙️ Configurações</h3>
+        <small>Administração do sistema</small>
+      </a>
+    {% endif %}
   </div>
 {% endblock %}

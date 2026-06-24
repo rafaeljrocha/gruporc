@@ -30,7 +30,22 @@ def home():
     for modulo in MODULOS_SISTEMA:
         habilitado = papel == "master" or modulo["slug"] in habilitados
         modulos.append({**modulo, "habilitado": habilitado})
-    return render_template("home.html", modulos=modulos)
+    return render_template("home.html", modulos=modulos, papel=papel)
+
+
+@paginas_bp.route("/configuracoes")
+@login_required
+def configuracoes():
+    from app.auth import master_required as _mr
+    if session.get("papel") != "master":
+        abort(403)
+    from app.database import get_db, row_to_dict
+    conn = get_db(_config())
+    try:
+        usuarios = [row_to_dict(r) for r in conn.execute("SELECT id, nome, email, papel, ativo, modulos_habilitados FROM usuario ORDER BY id").fetchall()]
+    finally:
+        conn.close()
+    return render_template("configuracoes.html", usuarios=usuarios, modulos=MODULOS_SISTEMA)
 
 
 @paginas_bp.route("/secretariado")

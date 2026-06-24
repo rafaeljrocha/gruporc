@@ -384,3 +384,98 @@ def salvar_configuracoes_secretariado():
     if "webhook_n8n_url" in dados:
         configuracao_service.definir_valor(_config(), "webhook_n8n_url", dados["webhook_n8n_url"].strip())
     return jsonify(modulo)
+
+
+# ── Usuários (master only) ────────────────────────────────────────────────────
+
+@secretariado_api_bp.route("/usuarios", methods=["POST"])
+@master_required
+def criar_usuario():
+    import bcrypt as _bcrypt
+    from app.database import get_db, row_to_dict
+    dados = request.get_json() or {}
+    nome = (dados.get("nome") or "").strip()
+    email = (dados.get("email") or "").strip().lower()
+    senha = (dados.get("senha") or "").strip()
+    papel = dados.get("papel", "padrao")
+    ativo = int(dados.get("ativo", 1))
+    modulos = dados.get("modulos_habilitados", "[]")
+    if not nome or not email:
+        return jsonify({"erro": "Nome e email são obrigatórios"}), 400
+    if not senha or len(senha) < 10:
+        return jsonify({"erro": "Senha deve ter pelo menos 10 caracteres"}), 400
+    senha_hash = _bcrypt.hashpw(senha.encode(), _bcrypt.gensalt()).decode()
+    conn = get_db(_config())
+    try:
+        existe = conn.execute("SELECT id FROM usuario WHERE email = ?", (email,)).fetchone()
+        if existe:
+            return jsonify({"erro": "Email já cadastrado"}), 409
+        cur = conn.execute(
+            "INSERT INTO usuario (nome, email, senha_hash, papel, ativo, modulos_habilitados) VALUES (?,?,?,?,?,?)",
+            (nome, email, senha_hash, papel, ativo, modulos)
+        )
+        conn.commit()
+        u = row_to_dict(conn.execute("SELECT id, nome, email, papel, ativo FROM usuario WHERE id = ?", (cur.lastrowid,)).fetchone())
+    finally:
+        conn.close()
+    return jsonify(u), 201
+
+
+@secretariado_api_bp.route("/usuarios/<int:uid>", methods=["PUT"])
+@master_required
+def atualizar_usuario(uid):
+    import bcrypt as _bcrypt
+    from app.database import get_db, row_to_dict
+    dados = request.get_json() or {}
+    nome = (dados.get("nome") or "").strip()
+    email = (dados.get("email") or "").strip().lower()
+    senha = (dados.get("senha") or "").strip()
+    papel = dados.get("papel", "padrao")
+    ativo = int(dados.get("ativo", 1))
+    modulos = dados.get("modulos_habilitados", "[]")
+    if not nome or not email:
+        return jsonify({"erro": "Nome e email são obrigatórios"}), 400
+    conn = get_db(_config())
+    try:
+        u = conn.execute("SELECT id FROM usuario WHERE id = ?", (uid,)).fetchone()
+        if not u:
+            return jsonify({"erro": "Usuário não encontrado"}), 404
+        if senha:
+            if len(senha) < 10:
+                return jsonify({"erro": "Senha deve ter pelo menos 10 caracteres"}), 400
+            senha_hash = _bcrypt.hashpw(senha.encode(), _bcrypt.gensalt()).decode()
+            conn.execute(
+                "UPDATE usuario SET nome=?, email=?, senha_hash=?, papel=?, ativo=?, modulos_habilitados=? WHERE id=?",
+                (nome, email, senha_hash, papel, ativo, modulos, uid)
+            )
+        else:
+            conn.execute(
+                "UPDATE usuario SET nome=?, email=?, papel=?, ativo=?, modulos_habilitados=? WHERE id=?",
+                (nome, email, papel, ativo, modulos, uid)
+            )
+        conn.commit()
+        u = row_to_dict(conn.execute("SELECT id, nome, email, papel, ativo FROM usuario WHERE id = ?", (uid,)).fetchone())
+    finally:
+        conn.close()
+    return jsonify(u)
+
+
+@secretariado_api_bp.route("/usuarios/alterar-senha", methods=["POST"])
+@api_login_required
+def alterar_senha_proprio():
+    import bcrypt as _bcrypt
+    from flask import session as _session
+    from app.database import get_db
+    dados = request.get_json() or {}
+    nova = (dados.get("nova_senha") or "").strip()
+    if len(nova) < 10:
+        return jsonify({"erro": "Senha deve ter pelo menos 10 caracteres"}), 400
+    uid = _session.get("usuario_id")
+    senha_hash = _bcrypt.hashpw(nova.encode(), _bcrypt.gensalt()).decode()
+    conn = get_db(_config())
+    try:
+        conn.execute("UPDATE usuario SET senha_hash = ? WHERE id = ?", (senha_hash, uid))
+        conn.commit()
+    finally:
+        conn.close()
+    return jsonify({"ok": True})
