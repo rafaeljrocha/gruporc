@@ -9,11 +9,19 @@
 </head>
 <body>
   <header class="topo">
-    <div class="logo-area">SISRITHA</div>
+    <div class="logo-area">
+      {% if config_sistema and config_sistema.logo_path %}
+        <img src="{{ url_for('paginas.data_arquivo', caminho=config_sistema.logo_path) }}" alt="Logo">
+      {% endif %}
+      <span>{{ (config_sistema and config_sistema.nome_sistema) or 'SISRITHA' }}</span>
+    </div>
     <nav class="modulos-nav">
       {% block nav_modulos %}{% endblock %}
     </nav>
     <div class="usuario-area">
+      {% if session.get('papel') == 'master' %}
+        <a class="botao-config" href="{{ url_for('paginas.configuracoes_sistema') }}">⚙️ Configurações</a>
+      {% endif %}
       <span>{{ session.get('usuario_nome', '') }}</span>
       <a class="botao-sair" href="{{ url_for('auth.logout') }}">Sair</a>
     </div>

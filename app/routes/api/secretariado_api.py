@@ -479,3 +479,43 @@ def alterar_senha_proprio():
     finally:
         conn.close()
     return jsonify({"ok": True})
+
+
+# ── Configurações Gerais do Sistema ──────────────────────────────────────────
+
+@secretariado_api_bp.route("/configuracoes-sistema", methods=["POST"])
+@master_required
+def salvar_configuracoes_sistema():
+    from app.database import get_db
+    dados = request.form.to_dict()
+    config = _config()
+
+    # Upload do logo
+    logo = request.files.get("logo")
+    if logo and logo.filename:
+        import uuid, os
+        logos_dir = config.data_dir / "logos" / "sistema"
+        logos_dir.mkdir(parents=True, exist_ok=True)
+        ext = os.path.splitext(logo.filename)[1].lower()
+        nome_arquivo = f"logo_sistema{ext}"
+        caminho = logos_dir / nome_arquivo
+        logo.save(str(caminho))
+        dados["logo_path"] = str(caminho)
+
+    # Salvar cada chave na tabela configuracao
+    chaves_permitidas = ["nome_sistema", "logo_path", "texto_apresentacao",
+                         "telefone", "email", "endereco", "site"]
+    conn = get_db(config)
+    try:
+        for chave in chaves_permitidas:
+            if chave in dados:
+                conn.execute(
+                    "INSERT INTO configuracao (chave, valor) VALUES (?, ?) "
+                    "ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor, updated_at=CURRENT_TIMESTAMP",
+                    (chave, dados[chave])
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return jsonify({"ok": True})

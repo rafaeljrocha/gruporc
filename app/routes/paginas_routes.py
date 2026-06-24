@@ -21,6 +21,33 @@ def _config():
     return current_app.config["SISRITHA_CONFIG"]
 
 
+def _obter_config_sistema():
+    """Retorna configurações globais do sistema (logo, nome, dados)."""
+    from app.database import get_db, row_to_dict
+    try:
+        conn = get_db(_config())
+        chaves = ["nome_sistema", "logo_path", "texto_apresentacao",
+                  "telefone", "email", "endereco", "site"]
+        resultado = {}
+        for chave in chaves:
+            row = conn.execute(
+                "SELECT valor FROM configuracao WHERE chave = ?", (chave,)
+            ).fetchone()
+            resultado[chave] = row[0] if row else None
+        conn.close()
+        return resultado
+    except Exception:
+        return {}
+
+
+@paginas_bp.context_processor
+def injetar_config_sistema():
+    """Injeta config_sistema em todos os templates do blueprint."""
+    if session.get("usuario_id"):
+        return {"config_sistema": _obter_config_sistema()}
+    return {"config_sistema": {}}
+
+
 @paginas_bp.route("/")
 @login_required
 def home():
@@ -33,25 +60,35 @@ def home():
     return render_template("home.html", modulos=modulos, papel=papel)
 
 
+@paginas_bp.route("/secretariado")
+@login_required
+def secretariado():
+    return render_template("modulos/secretariado/index.html")
+
+
 @paginas_bp.route("/configuracoes")
 @login_required
 def configuracoes():
-    from app.auth import master_required as _mr
     if session.get("papel") != "master":
         abort(403)
     from app.database import get_db, row_to_dict
     conn = get_db(_config())
     try:
-        usuarios = [row_to_dict(r) for r in conn.execute("SELECT id, nome, email, papel, ativo, modulos_habilitados FROM usuario ORDER BY id").fetchall()]
+        usuarios = [row_to_dict(r) for r in conn.execute(
+            "SELECT id, nome, email, papel, ativo, modulos_habilitados FROM usuario ORDER BY id"
+        ).fetchall()]
     finally:
         conn.close()
     return render_template("configuracoes.html", usuarios=usuarios, modulos=MODULOS_SISTEMA)
 
 
-@paginas_bp.route("/secretariado")
+@paginas_bp.route("/configuracoes-sistema")
 @login_required
-def secretariado():
-    return render_template("modulos/secretariado/index.html")
+def configuracoes_sistema():
+    if session.get("papel") != "master":
+        abort(403)
+    config = _obter_config_sistema()
+    return render_template("configuracoes_sistema.html", cfg=config)
 
 
 @paginas_bp.route("/data-arquivo")

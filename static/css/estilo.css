@@ -79,6 +79,24 @@ a { color: var(--cor-primaria-escura); text-decoration: none; }
   border-radius: var(--raio);
   padding: 0.4rem 0.9rem;
   cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.topo .usuario-area .botao-config {
+  background: rgba(255,255,255,0.15);
+  color: var(--cor-texto-claro);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: var(--raio);
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.topo .usuario-area .botao-config:hover {
+  background: rgba(255,255,255,0.25);
 }
 
 /* Container principal */

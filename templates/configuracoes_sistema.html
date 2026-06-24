@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block titulo %}SISRITHA — Configurações do Sistema{% endblock %}
+{% block conteudo %}
+<div style="max-width:700px; margin:0 auto;">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+    <h2 style="margin:0;">⚙️ Configurações do Sistema</h2>
+    <a href="{{ url_for('paginas.home') }}" style="color:var(--cor-primaria); text-decoration:none;">← Voltar</a>
+  </div>
+
+  <div id="msg-sistema" class="alerta" style="display:none;"></div>
+
+  <div class="card">
+
+    <!-- Logo atual -->
+    <div style="margin-bottom:1.5rem;">
+      <label style="font-weight:600; display:block; margin-bottom:0.5rem;">Logo do Sistema</label>
+      {% if cfg.logo_path %}
+        <div style="margin-bottom:0.8rem;">
+          <img src="{{ url_for('paginas.data_arquivo', caminho=cfg.logo_path) }}"
+               alt="Logo atual" style="max-height:80px; border:1px solid #eee; border-radius:8px; padding:6px;">
+          <div style="font-size:0.8rem; color:#888; margin-top:4px;">Logo atual</div>
+        </div>
+      {% endif %}
+      <input type="file" id="logo-file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+             style="margin-bottom:0.3rem;">
+      <div style="font-size:0.8rem; color:#888;">PNG, JPG ou SVG. Recomendado: fundo transparente.</div>
+    </div>
+
+    <!-- Nome do sistema -->
+    <div class="campo">
+      <label>Nome do Sistema</label>
+      <input type="text" id="nome-sistema" value="{{ cfg.nome_sistema or 'SISRITHA' }}"
+             placeholder="Ex: SISRITHA">
+    </div>
+
+    <!-- Texto de apresentação -->
+    <div class="campo">
+      <label>Texto de Apresentação</label>
+      <textarea id="texto-apresentacao" rows="3"
+                placeholder="Breve descrição exibida na tela de login ou home"
+                style="width:100%; resize:vertical;">{{ cfg.texto_apresentacao or '' }}</textarea>
+    </div>
+
+    <!-- Dados de contato -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+      <div class="campo">
+        <label>Telefone</label>
+        <input type="text" id="telefone" value="{{ cfg.telefone or '' }}" placeholder="(44) 99999-9999">
+      </div>
+      <div class="campo">
+        <label>Email</label>
+        <input type="email" id="email" value="{{ cfg.email or '' }}" placeholder="contato@gruporc.com.br">
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Endereço</label>
+      <input type="text" id="endereco" value="{{ cfg.endereco or '' }}"
+             placeholder="Rua, número, cidade, estado">
+    </div>
+
+    <div class="campo">
+      <label>Site</label>
+      <input type="url" id="site" value="{{ cfg.site or '' }}" placeholder="https://gruporc.com.br">
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
+      <button class="botao" onclick="salvarConfigSistema()">💾 Salvar Configurações</button>
+    </div>
+
+  </div>
+
+  <!-- Gestão de Usuários -->
+  <div class="card" style="margin-top:2rem;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+      <h3 style="margin:0;">👥 Usuários do Sistema</h3>
+      <a class="botao" href="{{ url_for('paginas.configuracoes') }}">Gerenciar Usuários</a>
+    </div>
+    <p style="color:#666; font-size:0.9rem; margin:0;">
+      Adicione, edite e controle o acesso dos usuários ao sistema e seus módulos.
+    </p>
+  </div>
+
+</div>
+
+<script>
+async function salvarConfigSistema() {
+  const msg = document.getElementById('msg-sistema');
+  const fd = new FormData();
+
+  const logo = document.getElementById('logo-file').files[0];
+  if (logo) fd.append('logo', logo);
+
+  fd.append('nome_sistema',        document.getElementById('nome-sistema').value.trim());
+  fd.append('texto_apresentacao',  document.getElementById('texto-apresentacao').value.trim());
+  fd.append('telefone',            document.getElementById('telefone').value.trim());
+  fd.append('email',               document.getElementById('email').value.trim());
+  fd.append('endereco',            document.getElementById('endereco').value.trim());
+  fd.append('site',                document.getElementById('site').value.trim());
+
+  try {
+    const resp = await fetch('/api/configuracoes-sistema', {
+      method: 'POST',
+      body: fd
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.erro || 'Erro ao salvar');
+    msg.textContent = '✅ Configurações salvas com sucesso!';
+    msg.className = 'alerta alerta-sucesso';
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; location.reload(); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + e.message;
+    msg.className = 'alerta alerta-erro';
+    msg.style.display = 'block';
+  }
+}
+</script>
+{% endblock %}
