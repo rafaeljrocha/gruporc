@@ -25,11 +25,17 @@ def create_app() -> Flask:
     from app.routes.paginas_routes import paginas_bp
     from app.routes.api.secretariado_api import secretariado_api_bp
     from app.routes.api.backup_api import backup_api_bp
+    from app.routes.api.despesas_api import despesas_api_bp
+    from app.routes.api.administrativo_api import administrativo_api_bp
+    from app.routes.api.marketing_api import marketing_api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(paginas_bp)
     app.register_blueprint(secretariado_api_bp)
     app.register_blueprint(backup_api_bp)
+    app.register_blueprint(despesas_api_bp)
+    app.register_blueprint(administrativo_api_bp)
+    app.register_blueprint(marketing_api_bp)
 
     @app.route("/healthz")
     def healthz():

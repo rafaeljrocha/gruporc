@@ -2,10 +2,11 @@
 {% block titulo %}SISRITHA — Módulos{% endblock %}
 {% block conteudo %}
   <h2>Selecione um módulo</h2>
+  {% set rotas_prontas = ['secretariado', 'administrativo', 'marketing'] %}
   <div class="grade-cards">
     {% for modulo in modulos %}
       {% if modulo.habilitado %}
-        <a class="card-modulo habilitado" href="{{ url_for('paginas.' + modulo.slug) if modulo.slug == 'secretariado' else '#' }}">
+        <a class="card-modulo habilitado" href="{{ url_for('paginas.' + modulo.slug) if modulo.slug in rotas_prontas else '#' }}">
           <h3>{{ modulo.nome }}</h3>
         </a>
       {% else %}

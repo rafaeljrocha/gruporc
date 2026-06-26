@@ -1,0 +1,74 @@
+<!-- Modal Projeto (compartilhado) -->
+<div class="overlay-modal" id="modal-projeto">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-projeto">Novo Projeto</h3>
+    <form id="form-projeto">
+      <input type="hidden" name="id">
+      <input type="hidden" name="modulo_slug">
+      <div class="campo"><label>Nome *</label><input type="text" name="nome" required></div>
+      <div class="campo"><label>Descrição</label><textarea name="descricao"></textarea></div>
+      <div class="campo"><label>Orçamento</label><input type="text" name="orcamento" data-money=""></div>
+      <div class="campo"><label>Responsável</label><input type="text" name="responsavel"></div>
+      <div class="campo"><label>Início</label><input type="date" name="data_inicio"></div>
+      <div class="campo"><label>Fim</label><input type="date" name="data_fim"></div>
+      <div class="campo"><label>Status</label>
+        <select name="status">
+          <option value="aberto">Aberto</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-projeto')">Cancelar</button>
+      <button class="botao" onclick="salvarProjeto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Despesa (compartilhado) -->
+<div class="overlay-modal" id="modal-despesa">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-despesa">Nova Despesa</h3>
+    <form id="form-despesa">
+      <input type="hidden" name="id">
+      <input type="hidden" name="modulo_slug">
+      <div class="campo"><label>Projeto</label><select name="projeto_id"></select></div>
+      <div class="campo"><label>Fornecedor *</label>
+        <input type="text" name="fornecedor" list="lista-fornecedores-desp" onchange="fornecedorSelecionado()" required>
+        <datalist id="lista-fornecedores-desp"></datalist>
+      </div>
+      <div class="campo"><label>Descrição</label><input type="text" name="descricao"></div>
+      <div class="campo"><label>Categoria</label><select name="categoria"></select></div>
+      <div class="campo"><label>Valor</label><input type="text" name="valor" data-money=""></div>
+      <div class="campo"><label>Data do Serviço</label><input type="date" name="data_servico"></div>
+      <div class="campo"><label>Vencimento</label><input type="date" name="data_vencimento"></div>
+      <div class="campo"><label>Modo de Pagamento</label>
+        <select name="modo_pagamento" onchange="togglePagamentoCampos()">
+          <option value="">—</option>
+          <option value="pix">Pix</option>
+          <option value="boleto">Boleto</option>
+          <option value="transferencia">Transferência</option>
+          <option value="parceria">Parceria</option>
+          <option value="cartao">Cartão</option>
+          <option value="dinheiro">Dinheiro</option>
+        </select>
+      </div>
+      <div class="campo" id="campo-chave-pix" style="display:none;"><label>Chave Pix</label><input type="text" name="chave_pix"></div>
+      <div class="campo" id="campo-parceria" style="display:none;"><label>Especificação da Parceria</label><input type="text" name="especificacao_parceria"></div>
+      <div class="campo"><label>Status do Pagamento</label>
+        <select name="status_pagamento">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="campo"><label>Comprovante (PDF/imagem)</label><input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg"></div>
+      <div class="campo"><label>Observações</label><textarea name="observacoes"></textarea></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-despesa')">Cancelar</button>
+      <button class="botao" onclick="salvarDespesa()">Salvar</button>
+    </div>
+  </div>
+</div>

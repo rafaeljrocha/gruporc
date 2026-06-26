@@ -1,0 +1,177 @@
+<!-- Modal Empresa -->
+<div class="overlay-modal" id="modal-empresa">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-empresa">Nova Empresa</h3>
+    <form id="form-empresa">
+      <input type="hidden" name="id">
+      <div class="campo"><label>Razão Social *</label><input type="text" name="razao_social" required></div>
+      <div class="campo"><label>Nome Fantasia</label><input type="text" name="nome_fantasia"></div>
+      <div class="campo"><label>CNPJ</label><input type="text" name="cnpj"></div>
+      <div class="campo"><label>Tipo</label>
+        <select name="tipo">
+          <option value="ltda">LTDA</option>
+          <option value="sa">S.A.</option>
+          <option value="mei">MEI</option>
+          <option value="slu">SLU</option>
+          <option value="holding">Holding</option>
+          <option value="offshore">Offshore</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>País</label><input type="text" name="pais" value="Brasil"></div>
+      <div class="campo"><label>Estado</label><input type="text" name="estado"></div>
+      <div class="campo"><label>Cidade</label><input type="text" name="cidade"></div>
+      <div class="campo"><label>Endereço</label><input type="text" name="endereco"></div>
+      <div class="campo"><label>CEP</label><input type="text" name="cep"></div>
+      <div class="campo"><label>Email</label><input type="email" name="email"></div>
+      <div class="campo"><label>Telefone</label><input type="text" name="telefone"></div>
+      <div class="campo"><label>Site</label><input type="text" name="site"></div>
+      <div class="campo"><label>Objeto Social</label><textarea name="objeto_social"></textarea></div>
+      <div class="campo"><label>Capital Social</label><input type="text" name="capital_social" data-money=""></div>
+      <div class="campo"><label>Data de Constituição</label><input type="date" name="data_constituicao"></div>
+      <div class="campo"><label>Status</label>
+        <select name="status">
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+          <option value="em_constituicao">Em constituição</option>
+          <option value="encerrada">Encerrada</option>
+        </select>
+      </div>
+      <div class="campo"><label>Observações</label><textarea name="observacoes"></textarea></div>
+      <div class="campo"><label>Logo</label><input type="file" name="logo" accept=".png,.jpg,.jpeg"></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-empresa')">Cancelar</button>
+      <button class="botao" onclick="salvarEmpresa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sócio -->
+<div class="overlay-modal" id="modal-socio">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-socio">Novo Sócio</h3>
+    <form id="form-socio">
+      <input type="hidden" name="id">
+      <div class="campo"><label>Nome *</label><input type="text" name="nome" required></div>
+      <div class="campo"><label>CPF / Passaporte</label><input type="text" name="cpf_passaporte"></div>
+      <div class="campo"><label>Tipo de Pessoa</label>
+        <select name="tipo_pessoa">
+          <option value="fisica">Física</option>
+          <option value="juridica">Jurídica</option>
+        </select>
+      </div>
+      <div class="campo"><label>Empresa</label><select name="empresa_id"></select></div>
+      <div class="campo"><label>Participação (%)</label><input type="number" step="0.01" name="percentual"></div>
+      <div class="campo"><label>Cargo</label><input type="text" name="cargo"></div>
+      <div class="campo"><label>Data de Entrada</label><input type="date" name="data_entrada"></div>
+      <div class="campo"><label>Data de Saída</label><input type="date" name="data_saida"></div>
+      <div class="campo"><label><input type="checkbox" name="ativo" checked> Ativo</label></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-socio')">Cancelar</button>
+      <button class="botao" onclick="salvarSocio()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Contrato -->
+<div class="overlay-modal" id="modal-contrato">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-contrato">Novo Contrato</h3>
+    <form id="form-contrato">
+      <input type="hidden" name="id">
+      <div class="campo"><label>Número</label><input type="text" name="numero"></div>
+      <div class="campo"><label>Objeto *</label><input type="text" name="objeto" required></div>
+      <div class="campo"><label>Empresa</label><select name="empresa_id"></select></div>
+      <div class="campo"><label>Contraparte</label><input type="text" name="contraparte"></div>
+      <div class="campo"><label>Valor</label><input type="text" name="valor" data-money=""></div>
+      <div class="campo"><label>Início</label><input type="date" name="data_inicio"></div>
+      <div class="campo"><label>Fim</label><input type="date" name="data_fim"></div>
+      <div class="campo"><label><input type="checkbox" name="renovacao_automatica"> Renovação automática</label></div>
+      <div class="campo"><label>Status</label>
+        <select name="status">
+          <option value="vigente">Vigente</option>
+          <option value="em_elaboracao">Em elaboração</option>
+          <option value="renovado">Renovado</option>
+          <option value="rescindido">Rescindido</option>
+          <option value="encerrado">Encerrado</option>
+        </select>
+      </div>
+      <div class="campo"><label>Arquivo</label><input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg"></div>
+      <div class="campo"><label>Observações</label><textarea name="observacoes"></textarea></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-contrato')">Cancelar</button>
+      <button class="botao" onclick="salvarContrato()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Documento Administrativo -->
+<div class="overlay-modal" id="modal-documento-adm">
+  <div class="caixa-modal">
+    <h3>Novo Documento</h3>
+    <form id="form-documento-adm">
+      <div class="campo"><label>Tipo *</label>
+        <select name="tipo_documento" required>
+          <option value="Contrato Social">Contrato Social</option>
+          <option value="Alteração Contratual">Alteração Contratual</option>
+          <option value="Ata de Reunião">Ata de Reunião</option>
+          <option value="Procuração">Procuração</option>
+          <option value="Certidão">Certidão</option>
+          <option value="Alvará">Alvará</option>
+          <option value="Licença">Licença</option>
+          <option value="Registro">Registro</option>
+          <option value="Certificado">Certificado</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Descrição</label><input type="text" name="descricao"></div>
+      <div class="campo"><label>Empresa</label><select name="empresa_id"></select></div>
+      <div class="campo"><label>Validade</label><input type="date" name="validade"></div>
+      <div class="campo"><label>Arquivo</label><input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg"></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-documento-adm')">Cancelar</button>
+      <button class="botao" onclick="salvarDocumentoAdm()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Obrigação -->
+<div class="overlay-modal" id="modal-obrigacao">
+  <div class="caixa-modal">
+    <h3 id="titulo-modal-obrigacao">Nova Obrigação</h3>
+    <form id="form-obrigacao">
+      <input type="hidden" name="id">
+      <div class="campo"><label>Descrição *</label><input type="text" name="descricao" required></div>
+      <div class="campo"><label>Empresa</label><select name="empresa_id"></select></div>
+      <div class="campo"><label>Periodicidade</label>
+        <select name="periodicidade">
+          <option value="mensal">Mensal</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="semestral">Semestral</option>
+          <option value="anual" selected>Anual</option>
+          <option value="unica">Única</option>
+        </select>
+      </div>
+      <div class="campo"><label>Próximo Vencimento</label><input type="date" name="proximo_vencimento"></div>
+      <div class="campo"><label>Responsável</label><input type="text" name="responsavel"></div>
+      <div class="campo"><label>Status</label>
+        <select name="status">
+          <option value="pendente">Pendente</option>
+          <option value="cumprida">Cumprida</option>
+          <option value="atrasada">Atrasada</option>
+        </select>
+      </div>
+      <div class="campo"><label>Observações</label><textarea name="observacoes"></textarea></div>
+    </form>
+    <div class="acoes-modal">
+      <button class="botao secundario" onclick="fecharModal('modal-obrigacao')">Cancelar</button>
+      <button class="botao" onclick="salvarObrigacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+{% include "modulos/_despesas_projetos_modais.html" %}

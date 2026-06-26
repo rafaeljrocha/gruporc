@@ -66,6 +66,18 @@ def secretariado():
     return render_template("modulos/secretariado/index.html")
 
 
+@paginas_bp.route("/administrativo")
+@login_required
+def administrativo():
+    return render_template("modulos/administrativo/index.html")
+
+
+@paginas_bp.route("/marketing")
+@login_required
+def marketing():
+    return render_template("modulos/marketing/index.html")
+
+
 @paginas_bp.route("/configuracoes")
 @login_required
 def configuracoes():

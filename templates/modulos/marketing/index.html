@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block titulo %}Marketing — SISRITHA{% endblock %}
+
+{% block nav_modulos %}
+  <a href="{{ url_for('paginas.home') }}">Início</a>
+  <a class="ativo" href="{{ url_for('paginas.marketing') }}">Marketing</a>
+{% endblock %}
+
+{% block conteudo %}
+<h2>Marketing</h2>
+<div id="mensagem-global" class="alerta" style="display:none;"></div>
+
+<div class="abas-nav" id="abas-nav">
+  <button data-aba="canais" class="ativa">Canais</button>
+  <button data-aba="conteudo">Conteúdo</button>
+  <button data-aba="campanhas">Campanhas</button>
+  <button data-aba="metricas">Métricas</button>
+  <button data-aba="arquivos">Arquivos</button>
+  <button data-aba="despesas">Despesas</button>
+  {% if session.get('papel') == 'master' %}
+  <button data-aba="configuracoes">Configurações</button>
+  {% endif %}
+</div>
+
+<!-- CANAIS -->
+<section class="aba-conteudo ativa" id="aba-canais">
+  <div class="barra-acoes"><h3>Canais</h3><button class="botao" onclick="abrirModalCanal()">+ Novo Canal</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>Plataforma</th><th>Handle/URL</th><th>Seguidores</th><th>Status</th><th>Responsável</th><th></th></tr></thead>
+    <tbody id="tabela-canais"></tbody>
+  </table>
+</section>
+
+<!-- CONTEUDO -->
+<section class="aba-conteudo" id="aba-conteudo">
+  <div class="barra-acoes"><h3>Conteúdo</h3><button class="botao" onclick="abrirModalConteudo()">+ Novo Conteúdo</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Título</th><th>Canal</th><th>Formato</th><th>Prevista</th><th>Status</th><th>Publicado</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-conteudo"></tbody>
+  </table>
+</section>
+
+<!-- CAMPANHAS -->
+<section class="aba-conteudo" id="aba-campanhas">
+  <div class="barra-acoes"><h3>Campanhas</h3><button class="botao" onclick="abrirModalCampanha()">+ Nova Campanha</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>Objetivo</th><th>Orçamento</th><th>Início</th><th>Fim</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tabela-campanhas"></tbody>
+  </table>
+</section>
+
+<!-- METRICAS -->
+<section class="aba-conteudo" id="aba-metricas">
+  <div class="barra-acoes"><h3>Métricas</h3><button class="botao" onclick="abrirModalMetrica()">+ Nova Métrica</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Canal</th><th>Período</th><th>Seguidores</th><th>Alcance</th><th>Impressões</th><th>Engaj. (%)</th><th>Cliques</th><th>Conversões</th><th></th></tr></thead>
+    <tbody id="tabela-metricas"></tbody>
+  </table>
+</section>
+
+<!-- ARQUIVOS -->
+<section class="aba-conteudo" id="aba-arquivos">
+  <div class="barra-acoes"><h3>Arquivos</h3><button class="botao" onclick="abrirModalArquivo()">+ Novo Arquivo</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>Tipo</th><th>Descrição</th><th>Tags</th><th></th></tr></thead>
+    <tbody id="tabela-arquivos"></tbody>
+  </table>
+</section>
+
+<!-- DESPESAS -->
+<section class="aba-conteudo" id="aba-despesas">
+  <div class="barra-acoes">
+    <h3>Despesas e Projetos</h3>
+    <div>
+      <button class="botao secundario" onclick="abrirModalProjeto()">+ Novo Projeto</button>
+      <button class="botao" onclick="abrirModalDespesa()">+ Nova Despesa</button>
+    </div>
+  </div>
+
+  <div id="lista-projetos" class="lista-projetos"></div>
+
+  <div class="barra-acoes" style="margin-top:1.5rem;">
+    <div>
+      <label style="font-weight:600; margin-right:.4rem;">Filtrar por projeto:</label>
+      <select id="filtro-projeto" onchange="carregarDespesas()"></select>
+    </div>
+    <span class="total-destaque" id="total-despesas">R$ 0,00</span>
+  </div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nº</th><th>Fornecedor</th><th>Descrição</th><th>Projeto</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-despesas"></tbody>
+  </table>
+</section>
+
+{% if session.get('papel') == 'master' %}
+<!-- CONFIGURACOES -->
+<section class="aba-conteudo" id="aba-configuracoes">
+  <h3>Configurações do Módulo</h3>
+  <form id="form-configuracoes" onsubmit="salvarConfiguracoes(event)">
+    <div class="campo"><label>Nome do Módulo</label><input type="text" name="nome"></div>
+    <div class="campo"><label>Responsável</label><input type="text" name="responsavel"></div>
+    <div class="campo"><label>Email de Contato</label><input type="email" name="email_contato"></div>
+    <div class="campo"><label>Telefone de Contato</label><input type="text" name="telefone_contato"></div>
+    <div class="campo"><label>Logo do Módulo</label><input type="file" name="logo" accept=".png,.jpg,.jpeg"></div>
+    <button type="submit" class="botao">Salvar Configurações</button>
+  </form>
+</section>
+{% endif %}
+
+{% include "modulos/marketing/_modais.html" %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+const MODULO_SLUG = "marketing";
+const CATEGORIAS_DESPESA = ["Produção de conteúdo","Tráfego pago","Influencer","Ferramentas","Design","Impressão","Evento","Outro"];
+{% include "modulos/_despesas_projetos.js" %}
+
+let canaisCache = [];
+
+const msgGlobal = () => document.getElementById("mensagem-global");
+function avisar(texto, tipo = "erro") {
+  mostrarMensagem(msgGlobal(), texto, tipo);
+  setTimeout(() => limparMensagem(msgGlobal()), 4000);
+}
+function badge(status, cor) { return `<span class="badge badge-${cor || "cinza"}">${escapeHtml(status || "")}</span>`; }
+const BADGE_CANAL = { ativo:"verde", inativo:"cinza", em_criacao:"amarelo" };
+const BADGE_CONTEUDO = { ideia:"cinza", em_producao:"azul", revisao:"amarelo", agendado:"roxo", publicado:"verde", cancelado:"vermelho" };
+const BADGE_CAMPANHA = { planejada:"cinza", ativa:"verde", pausada:"amarelo", encerrada:"roxo" };
+
+function nomeCanal(id) {
+  const c = canaisCache.find((x) => x.id === id);
+  return c ? c.nome : "—";
+}
+function opcoesCanal(selId) {
+  return `<option value="">— Canal —</option>` + canaisCache.map((c) =>
+    `<option value="${c.id}" ${c.id === selId ? "selected" : ""}>${escapeHtml(c.nome)}</option>`).join("");
+}
+function linkArquivo(caminho, nome) {
+  if (!caminho) return "—";
+  return `<a href="#" onclick="window.open('/data-arquivo?caminho='+encodeURIComponent('${caminho}'),'_blank');return false;">${escapeHtml(nome || "abrir")}</a>`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("#abas-nav button").forEach((b) => b.addEventListener("click", () => ativarAba(b.dataset.aba)));
+  carregarCanais();
+});
+function ativarAba(slug) {
+  document.querySelectorAll("#abas-nav button").forEach((b) => b.classList.toggle("ativa", b.dataset.aba === slug));
+  document.querySelectorAll(".aba-conteudo").forEach((s) => s.classList.toggle("ativa", s.id === "aba-" + slug));
+  if (slug === "canais") carregarCanais();
+  if (slug === "conteudo") carregarConteudos();
+  if (slug === "campanhas") carregarCampanhas();
+  if (slug === "metricas") carregarMetricas();
+  if (slug === "arquivos") carregarArquivos();
+  if (slug === "despesas") { carregarProjetos(); carregarDespesas(); }
+  if (slug === "configuracoes") carregarConfiguracoes();
+}
+
+/* ---------------- Canais ---------------- */
+async function carregarCanais() {
+  try {
+    canaisCache = await API.get("/api/canais");
+    const corpo = document.getElementById("tabela-canais");
+    corpo.innerHTML = canaisCache.map((c) => `
+      <tr>
+        <td>${escapeHtml(c.nome)}</td>
+        <td>${escapeHtml(c.plataforma)}</td>
+        <td>${escapeHtml(c.url_handle || "")}</td>
+        <td>${c.seguidores ?? 0}</td>
+        <td>${badge(c.status, BADGE_CANAL[c.status])}</td>
+        <td>${escapeHtml(c.responsavel || "")}</td>
+        <td>
+          <button class="botao secundario" onclick='editarCanal(${JSON.stringify(c)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirCanal(${c.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="7">Nenhum canal cadastrado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalCanal() {
+  const f = document.getElementById("form-canal");
+  f.reset(); f.id.value = "";
+  document.getElementById("titulo-modal-canal").textContent = "Novo Canal";
+  abrirModal("modal-canal");
+}
+function editarCanal(c) {
+  const f = document.getElementById("form-canal");
+  f.reset(); preencherFormulario(f, c);
+  document.getElementById("titulo-modal-canal").textContent = "Editar Canal";
+  abrirModal("modal-canal");
+}
+async function salvarCanal() {
+  const f = document.getElementById("form-canal");
+  if (!f.nome.value.trim() || !f.plataforma.value.trim()) { avisar("Nome e plataforma são obrigatórios"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/canais/${id}`, lerFormulario(f));
+    else await API.post("/api/canais", lerFormulario(f));
+    fecharModal("modal-canal"); carregarCanais(); avisar("Canal salvo", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirCanal(id) {
+  if (!confirm("Excluir este canal?")) return;
+  try { await API.delete(`/api/canais/${id}`); carregarCanais(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Conteúdo ---------------- */
+async function carregarConteudos() {
+  try {
+    if (!canaisCache.length) await carregarCanais();
+    const lista = await API.get("/api/conteudos");
+    const corpo = document.getElementById("tabela-conteudo");
+    corpo.innerHTML = lista.map((c) => `
+      <tr>
+        <td>${escapeHtml(c.titulo)}</td>
+        <td>${escapeHtml(nomeCanal(c.canal_id))}</td>
+        <td>${escapeHtml(c.formato || "")}</td>
+        <td>${escapeHtml(c.data_prevista || "")}</td>
+        <td>${badge(c.status, BADGE_CONTEUDO[c.status])}</td>
+        <td>${escapeHtml(c.data_publicacao || "")}</td>
+        <td>${linkArquivo(c.caminho_arquivo, c.nome_arquivo)}</td>
+        <td>
+          <button class="botao secundario" onclick='editarConteudo(${JSON.stringify(c)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirConteudo(${c.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="8">Nenhum conteúdo cadastrado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalConteudo() {
+  const f = document.getElementById("form-conteudo");
+  f.reset(); f.id.value = "";
+  f.canal_id.innerHTML = opcoesCanal(null);
+  document.getElementById("titulo-modal-conteudo").textContent = "Novo Conteúdo";
+  abrirModal("modal-conteudo");
+}
+function editarConteudo(c) {
+  const f = document.getElementById("form-conteudo");
+  f.reset();
+  f.canal_id.innerHTML = opcoesCanal(c.canal_id);
+  preencherFormulario(f, c);
+  document.getElementById("titulo-modal-conteudo").textContent = "Editar Conteúdo";
+  abrirModal("modal-conteudo");
+}
+async function salvarConteudo() {
+  const f = document.getElementById("form-conteudo");
+  if (!f.titulo.value.trim()) { avisar("Título é obrigatório"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/conteudos/${id}`, lerFormulario(f));
+    else await API.postForm("/api/conteudos", new FormData(f));
+    fecharModal("modal-conteudo"); carregarConteudos(); avisar("Conteúdo salvo", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirConteudo(id) {
+  if (!confirm("Excluir este conteúdo?")) return;
+  try { await API.delete(`/api/conteudos/${id}`); carregarConteudos(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Campanhas ---------------- */
+async function carregarCampanhas() {
+  try {
+    const lista = await API.get("/api/campanhas");
+    const corpo = document.getElementById("tabela-campanhas");
+    corpo.innerHTML = lista.map((c) => `
+      <tr>
+        <td>${escapeHtml(c.nome)}</td>
+        <td>${escapeHtml(c.objetivo || "")}</td>
+        <td>${c.orcamento != null ? formatarBRL(c.orcamento) : ""}</td>
+        <td>${escapeHtml(c.data_inicio || "")}</td>
+        <td>${escapeHtml(c.data_fim || "")}</td>
+        <td>${badge(c.status, BADGE_CAMPANHA[c.status])}</td>
+        <td>
+          <button class="botao secundario" onclick='editarCampanha(${JSON.stringify(c)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirCampanha(${c.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="7">Nenhuma campanha cadastrada.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalCampanha() {
+  const f = document.getElementById("form-campanha");
+  f.reset(); f.id.value = "";
+  document.getElementById("titulo-modal-campanha").textContent = "Nova Campanha";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-campanha");
+}
+function editarCampanha(c) {
+  const f = document.getElementById("form-campanha");
+  f.reset(); preencherFormulario(f, c);
+  document.getElementById("titulo-modal-campanha").textContent = "Editar Campanha";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-campanha");
+}
+async function salvarCampanha() {
+  const f = document.getElementById("form-campanha");
+  if (!f.nome.value.trim()) { avisar("Nome é obrigatório"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/campanhas/${id}`, lerFormulario(f));
+    else await API.post("/api/campanhas", lerFormulario(f));
+    fecharModal("modal-campanha"); carregarCampanhas(); avisar("Campanha salva", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirCampanha(id) {
+  if (!confirm("Excluir esta campanha?")) return;
+  try { await API.delete(`/api/campanhas/${id}`); carregarCampanhas(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Métricas ---------------- */
+async function carregarMetricas() {
+  try {
+    if (!canaisCache.length) await carregarCanais();
+    const lista = await API.get("/api/metricas");
+    const corpo = document.getElementById("tabela-metricas");
+    corpo.innerHTML = lista.map((m) => `
+      <tr>
+        <td>${escapeHtml(m.canal_nome || nomeCanal(m.canal_id))}</td>
+        <td>${m.periodo_mes ? String(m.periodo_mes).padStart(2,"0") + "/" : ""}${m.periodo_ano || ""}</td>
+        <td>${m.seguidores ?? ""}</td>
+        <td>${m.alcance ?? ""}</td>
+        <td>${m.impressoes ?? ""}</td>
+        <td>${m.engajamento ?? ""}</td>
+        <td>${m.cliques ?? ""}</td>
+        <td>${m.conversoes ?? ""}</td>
+        <td>
+          <button class="botao secundario" onclick='editarMetrica(${JSON.stringify(m)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirMetrica(${m.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="9">Nenhuma métrica registrada.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalMetrica() {
+  const f = document.getElementById("form-metrica");
+  f.reset(); f.id.value = "";
+  f.canal_id.innerHTML = opcoesCanal(null);
+  document.getElementById("titulo-modal-metrica").textContent = "Nova Métrica";
+  abrirModal("modal-metrica");
+}
+function editarMetrica(m) {
+  const f = document.getElementById("form-metrica");
+  f.reset();
+  f.canal_id.innerHTML = opcoesCanal(m.canal_id);
+  preencherFormulario(f, m);
+  document.getElementById("titulo-modal-metrica").textContent = "Editar Métrica";
+  abrirModal("modal-metrica");
+}
+async function salvarMetrica() {
+  const f = document.getElementById("form-metrica");
+  if (!f.canal_id.value) { avisar("Canal é obrigatório"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/metricas/${id}`, lerFormulario(f));
+    else await API.post("/api/metricas", lerFormulario(f));
+    fecharModal("modal-metrica"); carregarMetricas(); avisar("Métrica salva", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirMetrica(id) {
+  if (!confirm("Excluir esta métrica?")) return;
+  try { await API.delete(`/api/metricas/${id}`); carregarMetricas(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Arquivos ---------------- */
+async function carregarArquivos() {
+  try {
+    const lista = await API.get("/api/arquivos-marketing");
+    const corpo = document.getElementById("tabela-arquivos");
+    corpo.innerHTML = lista.map((a) => `
+      <tr>
+        <td>${linkArquivo(a.caminho_arquivo, a.nome)}</td>
+        <td>${escapeHtml(a.tipo_arquivo || "")}</td>
+        <td>${escapeHtml(a.descricao || "")}</td>
+        <td>${escapeHtml(a.tags || "")}</td>
+        <td><button class="botao secundario" onclick="excluirArquivo(${a.id})">Excluir</button></td>
+      </tr>`).join("") || `<tr><td colspan="5">Nenhum arquivo enviado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalArquivo() {
+  const f = document.getElementById("form-arquivo");
+  f.reset();
+  abrirModal("modal-arquivo");
+}
+async function salvarArquivo() {
+  const f = document.getElementById("form-arquivo");
+  if (!f.arquivo.files.length && !f.nome.value.trim()) { avisar("Selecione um arquivo"); return; }
+  try {
+    await API.postForm("/api/arquivos-marketing", new FormData(f));
+    fecharModal("modal-arquivo"); carregarArquivos(); avisar("Arquivo enviado", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirArquivo(id) {
+  if (!confirm("Excluir este arquivo?")) return;
+  try { await API.delete(`/api/arquivos-marketing/${id}`); carregarArquivos(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Configurações ---------------- */
+async function carregarConfiguracoes() {
+  try {
+    const cfg = await API.get("/api/marketing/configuracoes");
+    preencherFormulario(document.getElementById("form-configuracoes"), cfg || {});
+  } catch (e) { avisar(e.message); }
+}
+async function salvarConfiguracoes(ev) {
+  ev.preventDefault();
+  try {
+    await API.postForm("/api/marketing/configuracoes", new FormData(ev.target), "PUT");
+    avisar("Configurações salvas", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+{% block titulo %}Administrativo — SISRITHA{% endblock %}
+
+{% block nav_modulos %}
+  <a href="{{ url_for('paginas.home') }}">Início</a>
+  <a class="ativo" href="{{ url_for('paginas.administrativo') }}">Administrativo</a>
+{% endblock %}
+
+{% block conteudo %}
+<h2>Administrativo</h2>
+<div id="mensagem-global" class="alerta" style="display:none;"></div>
+
+<div class="abas-nav" id="abas-nav">
+  <button data-aba="empresas" class="ativa">Empresas</button>
+  <button data-aba="socios">Sócios</button>
+  <button data-aba="contratos">Contratos</button>
+  <button data-aba="documentos">Documentos</button>
+  <button data-aba="obrigacoes">Obrigações</button>
+  <button data-aba="despesas">Despesas</button>
+  {% if session.get('papel') == 'master' %}
+  <button data-aba="configuracoes">Configurações</button>
+  {% endif %}
+</div>
+
+<!-- EMPRESAS -->
+<section class="aba-conteudo ativa" id="aba-empresas">
+  <div class="barra-acoes"><h3>Empresas</h3><button class="botao" onclick="abrirModalEmpresa()">+ Nova Empresa</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Razão Social</th><th>Nome Fantasia</th><th>CNPJ</th><th>Tipo</th><th>País</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tabela-empresas"></tbody>
+  </table>
+</section>
+
+<!-- SOCIOS -->
+<section class="aba-conteudo" id="aba-socios">
+  <div class="barra-acoes"><h3>Sócios</h3><button class="botao" onclick="abrirModalSocio()">+ Novo Sócio</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nome</th><th>CPF/Passaporte</th><th>Empresa</th><th>Participação</th><th>Cargo</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tabela-socios"></tbody>
+  </table>
+</section>
+
+<!-- CONTRATOS -->
+<section class="aba-conteudo" id="aba-contratos">
+  <div class="barra-acoes"><h3>Contratos</h3><button class="botao" onclick="abrirModalContrato()">+ Novo Contrato</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Número</th><th>Objeto</th><th>Empresa</th><th>Contraparte</th><th>Valor</th><th>Vigência fim</th><th>Status</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-contratos"></tbody>
+  </table>
+</section>
+
+<!-- DOCUMENTOS -->
+<section class="aba-conteudo" id="aba-documentos">
+  <div class="barra-acoes"><h3>Documentos</h3><button class="botao" onclick="abrirModalDocumentoAdm()">+ Novo Documento</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Tipo</th><th>Descrição</th><th>Empresa</th><th>Validade</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-documentos-adm"></tbody>
+  </table>
+</section>
+
+<!-- OBRIGACOES -->
+<section class="aba-conteudo" id="aba-obrigacoes">
+  <div class="barra-acoes"><h3>Obrigações</h3><button class="botao" onclick="abrirModalObrigacao()">+ Nova Obrigação</button></div>
+  <table class="tabela-dados">
+    <thead><tr><th>Descrição</th><th>Empresa</th><th>Periodicidade</th><th>Próximo Vencimento</th><th>Status</th><th>Responsável</th><th></th></tr></thead>
+    <tbody id="tabela-obrigacoes"></tbody>
+  </table>
+</section>
+
+<!-- DESPESAS -->
+<section class="aba-conteudo" id="aba-despesas">
+  <div class="barra-acoes">
+    <h3>Despesas e Projetos</h3>
+    <div>
+      <button class="botao secundario" onclick="abrirModalProjeto()">+ Novo Projeto</button>
+      <button class="botao" onclick="abrirModalDespesa()">+ Nova Despesa</button>
+    </div>
+  </div>
+
+  <div id="lista-projetos" class="lista-projetos"></div>
+
+  <div class="barra-acoes" style="margin-top:1.5rem;">
+    <div>
+      <label style="font-weight:600; margin-right:.4rem;">Filtrar por projeto:</label>
+      <select id="filtro-projeto" onchange="carregarDespesas()"></select>
+    </div>
+    <span class="total-destaque" id="total-despesas">R$ 0,00</span>
+  </div>
+  <table class="tabela-dados">
+    <thead><tr><th>Nº</th><th>Fornecedor</th><th>Descrição</th><th>Projeto</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Arquivo</th><th></th></tr></thead>
+    <tbody id="tabela-despesas"></tbody>
+  </table>
+</section>
+
+{% if session.get('papel') == 'master' %}
+<!-- CONFIGURACOES -->
+<section class="aba-conteudo" id="aba-configuracoes">
+  <h3>Configurações do Módulo</h3>
+  <form id="form-configuracoes" onsubmit="salvarConfiguracoes(event)">
+    <div class="campo"><label>Nome do Módulo</label><input type="text" name="nome"></div>
+    <div class="campo"><label>Responsável</label><input type="text" name="responsavel"></div>
+    <div class="campo"><label>Email de Contato</label><input type="email" name="email_contato"></div>
+    <div class="campo"><label>Telefone de Contato</label><input type="text" name="telefone_contato"></div>
+    <div class="campo"><label>Logo do Módulo</label><input type="file" name="logo" accept=".png,.jpg,.jpeg"></div>
+    <button type="submit" class="botao">Salvar Configurações</button>
+  </form>
+</section>
+{% endif %}
+
+{% include "modulos/administrativo/_modais.html" %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+const MODULO_SLUG = "administrativo";
+const CATEGORIAS_DESPESA = ["Material de escritório","Serviços","Alimentação","Transporte","Tecnologia","Infraestrutura","Outro"];
+{% include "modulos/_despesas_projetos.js" %}
+
+/* ---------------- Estado ---------------- */
+let empresasCache = [];
+
+const msgGlobal = () => document.getElementById("mensagem-global");
+function avisar(texto, tipo = "erro") {
+  mostrarMensagem(msgGlobal(), texto, tipo);
+  setTimeout(() => limparMensagem(msgGlobal()), 4000);
+}
+function diasParaVencer(dataStr) {
+  if (!dataStr) return null;
+  return Math.ceil((new Date(dataStr) - new Date()) / 86400000);
+}
+function badge(status, label, mapa) {
+  const cor = (mapa && mapa[status]) || "cinza";
+  return `<span class="badge badge-${cor}">${escapeHtml(label || status || "")}</span>`;
+}
+const BADGE_EMPRESA = { ativa:"verde", inativa:"cinza", em_constituicao:"amarelo", encerrada:"vermelho" };
+const BADGE_CONTRATO = { vigente:"verde", em_elaboracao:"azul", renovado:"roxo", rescindido:"vermelho", encerrado:"cinza" };
+const BADGE_OBRIGACAO = { pendente:"amarelo", cumprida:"verde", atrasada:"vermelho" };
+
+function nomeEmpresa(id) {
+  const e = empresasCache.find((x) => x.id === id);
+  return e ? (e.nome_fantasia || e.razao_social) : "—";
+}
+function linkArquivo(caminho, nome) {
+  if (!caminho) return "—";
+  return `<a href="#" onclick="window.open('/data-arquivo?caminho='+encodeURIComponent('${caminho}'),'_blank');return false;">${escapeHtml(nome || "abrir")}</a>`;
+}
+function opcoesEmpresa(selId) {
+  return `<option value="">— Empresa —</option>` + empresasCache.map((e) =>
+    `<option value="${e.id}" ${e.id === selId ? "selected" : ""}>${escapeHtml(e.nome_fantasia || e.razao_social)}</option>`).join("");
+}
+
+/* ---------------- Navegação ---------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("#abas-nav button").forEach((b) => b.addEventListener("click", () => ativarAba(b.dataset.aba)));
+  inicializarMascarasMonetarias();
+  carregarEmpresas();
+});
+function ativarAba(slug) {
+  document.querySelectorAll("#abas-nav button").forEach((b) => b.classList.toggle("ativa", b.dataset.aba === slug));
+  document.querySelectorAll(".aba-conteudo").forEach((s) => s.classList.toggle("ativa", s.id === "aba-" + slug));
+  if (slug === "empresas") carregarEmpresas();
+  if (slug === "socios") carregarSocios();
+  if (slug === "contratos") carregarContratos();
+  if (slug === "documentos") carregarDocumentosAdm();
+  if (slug === "obrigacoes") carregarObrigacoes();
+  if (slug === "despesas") { carregarProjetos(); carregarDespesas(); }
+  if (slug === "configuracoes") carregarConfiguracoes();
+}
+
+/* ---------------- Empresas ---------------- */
+async function carregarEmpresas() {
+  try {
+    empresasCache = await API.get("/api/empresas");
+    const corpo = document.getElementById("tabela-empresas");
+    corpo.innerHTML = empresasCache.map((e) => `
+      <tr>
+        <td>${escapeHtml(e.razao_social)}</td>
+        <td>${escapeHtml(e.nome_fantasia || "")}</td>
+        <td>${escapeHtml(e.cnpj || "")}</td>
+        <td>${escapeHtml(e.tipo || "")}</td>
+        <td>${escapeHtml(e.pais || "")}</td>
+        <td>${badge(e.status, e.status, BADGE_EMPRESA)}</td>
+        <td>
+          <button class="botao secundario" onclick='editarEmpresa(${e.id})'>Editar</button>
+          <button class="botao secundario" onclick="excluirEmpresa(${e.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="7">Nenhuma empresa cadastrada.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalEmpresa() {
+  const f = document.getElementById("form-empresa");
+  f.reset(); f.id.value = "";
+  document.getElementById("titulo-modal-empresa").textContent = "Nova Empresa";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-empresa");
+}
+function editarEmpresa(id) {
+  const e = empresasCache.find((x) => x.id === id);
+  if (!e) return;
+  const f = document.getElementById("form-empresa");
+  f.reset();
+  preencherFormulario(f, e);
+  document.getElementById("titulo-modal-empresa").textContent = "Editar Empresa";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-empresa");
+}
+async function salvarEmpresa() {
+  const f = document.getElementById("form-empresa");
+  if (!f.razao_social.value.trim()) { avisar("Razão social é obrigatória"); return; }
+  const id = f.id.value;
+  try {
+    if (id) {
+      await API.put(`/api/empresas/${id}`, lerFormulario(f));
+    } else {
+      const fd = new FormData(f);
+      await API.postForm("/api/empresas", fd);
+    }
+    fecharModal("modal-empresa");
+    carregarEmpresas();
+    avisar("Empresa salva", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirEmpresa(id) {
+  if (!confirm("Excluir esta empresa?")) return;
+  try { await API.delete(`/api/empresas/${id}`); carregarEmpresas(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Sócios ---------------- */
+async function carregarSocios() {
+  try {
+    if (!empresasCache.length) await carregarEmpresas();
+    const socios = await API.get("/api/socios");
+    const corpo = document.getElementById("tabela-socios");
+    corpo.innerHTML = socios.map((s) => `
+      <tr>
+        <td>${escapeHtml(s.nome)}</td>
+        <td>${escapeHtml(s.cpf_passaporte || "")}</td>
+        <td>${escapeHtml(nomeEmpresa(s.empresa_id))}</td>
+        <td>${s.percentual != null ? s.percentual + "%" : ""}</td>
+        <td>${escapeHtml(s.cargo || "")}</td>
+        <td>${s.ativo ? '<span class="badge badge-verde">ativo</span>' : '<span class="badge badge-cinza">inativo</span>'}</td>
+        <td>
+          <button class="botao secundario" onclick='editarSocio(${JSON.stringify(s)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirSocio(${s.id})">Excluir</button>
+        </td>
+      </tr>`).join("") || `<tr><td colspan="7">Nenhum sócio cadastrado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalSocio() {
+  const f = document.getElementById("form-socio");
+  f.reset(); f.id.value = "";
+  f.empresa_id.innerHTML = opcoesEmpresa(null);
+  document.getElementById("titulo-modal-socio").textContent = "Novo Sócio";
+  abrirModal("modal-socio");
+}
+function editarSocio(s) {
+  const f = document.getElementById("form-socio");
+  f.reset();
+  f.empresa_id.innerHTML = opcoesEmpresa(s.empresa_id);
+  preencherFormulario(f, s);
+  document.getElementById("titulo-modal-socio").textContent = "Editar Sócio";
+  abrirModal("modal-socio");
+}
+async function salvarSocio() {
+  const f = document.getElementById("form-socio");
+  if (!f.nome.value.trim()) { avisar("Nome é obrigatório"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/socios/${id}`, lerFormulario(f));
+    else await API.post("/api/socios", lerFormulario(f));
+    fecharModal("modal-socio"); carregarSocios(); avisar("Sócio salvo", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirSocio(id) {
+  if (!confirm("Excluir este sócio?")) return;
+  try { await API.delete(`/api/socios/${id}`); carregarSocios(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Contratos ---------------- */
+async function carregarContratos() {
+  try {
+    if (!empresasCache.length) await carregarEmpresas();
+    const contratos = await API.get("/api/contratos");
+    const corpo = document.getElementById("tabela-contratos");
+    corpo.innerHTML = contratos.map((c) => {
+      const dias = diasParaVencer(c.data_fim);
+      const alerta = (dias != null && dias >= 0 && dias <= 30) ? ' <span class="badge badge-laranja">Vence em breve</span>' : "";
+      return `
+      <tr>
+        <td>${escapeHtml(c.numero || "")}</td>
+        <td>${escapeHtml(c.objeto)}</td>
+        <td>${escapeHtml(nomeEmpresa(c.empresa_id))}</td>
+        <td>${escapeHtml(c.contraparte || "")}</td>
+        <td>${c.valor != null ? formatarBRL(c.valor) : ""}</td>
+        <td>${escapeHtml(c.data_fim || "")}${alerta}</td>
+        <td>${badge(c.status, c.status, BADGE_CONTRATO)}</td>
+        <td>${linkArquivo(c.caminho_arquivo, c.nome_arquivo)}</td>
+        <td>
+          <button class="botao secundario" onclick='editarContrato(${JSON.stringify(c)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirContrato(${c.id})">Excluir</button>
+        </td>
+      </tr>`; }).join("") || `<tr><td colspan="9">Nenhum contrato cadastrado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalContrato() {
+  const f = document.getElementById("form-contrato");
+  f.reset(); f.id.value = "";
+  f.empresa_id.innerHTML = opcoesEmpresa(null);
+  document.getElementById("titulo-modal-contrato").textContent = "Novo Contrato";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-contrato");
+}
+function editarContrato(c) {
+  const f = document.getElementById("form-contrato");
+  f.reset();
+  f.empresa_id.innerHTML = opcoesEmpresa(c.empresa_id);
+  preencherFormulario(f, c);
+  f.renovacao_automatica.checked = !!c.renovacao_automatica;
+  document.getElementById("titulo-modal-contrato").textContent = "Editar Contrato";
+  inicializarMascarasMonetarias(f);
+  abrirModal("modal-contrato");
+}
+async function salvarContrato() {
+  const f = document.getElementById("form-contrato");
+  if (!f.objeto.value.trim()) { avisar("Objeto é obrigatório"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/contratos/${id}`, lerFormulario(f));
+    else await API.postForm("/api/contratos", new FormData(f));
+    fecharModal("modal-contrato"); carregarContratos(); avisar("Contrato salvo", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirContrato(id) {
+  if (!confirm("Excluir este contrato?")) return;
+  try { await API.delete(`/api/contratos/${id}`); carregarContratos(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Documentos ---------------- */
+async function carregarDocumentosAdm() {
+  try {
+    if (!empresasCache.length) await carregarEmpresas();
+    const docs = await API.get("/api/documentos-adm");
+    const corpo = document.getElementById("tabela-documentos-adm");
+    corpo.innerHTML = docs.map((d) => {
+      const dias = diasParaVencer(d.validade);
+      const alerta = (dias != null && dias >= 0 && dias <= 60) ? ` <span class="badge badge-amarelo">vence em ${dias}d</span>` : "";
+      return `
+      <tr>
+        <td>${escapeHtml(d.tipo_documento)}</td>
+        <td>${escapeHtml(d.descricao || "")}</td>
+        <td>${escapeHtml(nomeEmpresa(d.empresa_id))}</td>
+        <td>${escapeHtml(d.validade || "")}${alerta}</td>
+        <td>${linkArquivo(d.caminho_arquivo, d.nome_arquivo)}</td>
+        <td><button class="botao secundario" onclick="excluirDocumentoAdm(${d.id})">Excluir</button></td>
+      </tr>`; }).join("") || `<tr><td colspan="6">Nenhum documento cadastrado.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalDocumentoAdm() {
+  const f = document.getElementById("form-documento-adm");
+  f.reset();
+  f.empresa_id.innerHTML = opcoesEmpresa(null);
+  abrirModal("modal-documento-adm");
+}
+async function salvarDocumentoAdm() {
+  const f = document.getElementById("form-documento-adm");
+  if (!f.tipo_documento.value) { avisar("Tipo é obrigatório"); return; }
+  try {
+    await API.postForm("/api/documentos-adm", new FormData(f));
+    fecharModal("modal-documento-adm"); carregarDocumentosAdm(); avisar("Documento salvo", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirDocumentoAdm(id) {
+  if (!confirm("Excluir este documento?")) return;
+  try { await API.delete(`/api/documentos-adm/${id}`); carregarDocumentosAdm(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Obrigações ---------------- */
+async function carregarObrigacoes() {
+  try {
+    if (!empresasCache.length) await carregarEmpresas();
+    const lista = await API.get("/api/obrigacoes");
+    const corpo = document.getElementById("tabela-obrigacoes");
+    corpo.innerHTML = lista.map((o) => {
+      const dias = diasParaVencer(o.proximo_vencimento);
+      const alerta = (dias != null && dias >= 0 && dias <= 7) ? ` <span class="badge badge-laranja">${dias}d</span>` : "";
+      return `
+      <tr>
+        <td>${escapeHtml(o.descricao)}</td>
+        <td>${escapeHtml(nomeEmpresa(o.empresa_id))}</td>
+        <td>${escapeHtml(o.periodicidade || "")}</td>
+        <td>${escapeHtml(o.proximo_vencimento || "")}${alerta}</td>
+        <td>${badge(o.status, o.status, BADGE_OBRIGACAO)}</td>
+        <td>${escapeHtml(o.responsavel || "")}</td>
+        <td>
+          <button class="botao secundario" onclick='editarObrigacao(${JSON.stringify(o)})'>Editar</button>
+          <button class="botao secundario" onclick="excluirObrigacao(${o.id})">Excluir</button>
+        </td>
+      </tr>`; }).join("") || `<tr><td colspan="7">Nenhuma obrigação cadastrada.</td></tr>`;
+  } catch (e) { avisar(e.message); }
+}
+function abrirModalObrigacao() {
+  const f = document.getElementById("form-obrigacao");
+  f.reset(); f.id.value = "";
+  f.empresa_id.innerHTML = opcoesEmpresa(null);
+  document.getElementById("titulo-modal-obrigacao").textContent = "Nova Obrigação";
+  abrirModal("modal-obrigacao");
+}
+function editarObrigacao(o) {
+  const f = document.getElementById("form-obrigacao");
+  f.reset();
+  f.empresa_id.innerHTML = opcoesEmpresa(o.empresa_id);
+  preencherFormulario(f, o);
+  document.getElementById("titulo-modal-obrigacao").textContent = "Editar Obrigação";
+  abrirModal("modal-obrigacao");
+}
+async function salvarObrigacao() {
+  const f = document.getElementById("form-obrigacao");
+  if (!f.descricao.value.trim()) { avisar("Descrição é obrigatória"); return; }
+  const id = f.id.value;
+  try {
+    if (id) await API.put(`/api/obrigacoes/${id}`, lerFormulario(f));
+    else await API.post("/api/obrigacoes", lerFormulario(f));
+    fecharModal("modal-obrigacao"); carregarObrigacoes(); avisar("Obrigação salva", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+async function excluirObrigacao(id) {
+  if (!confirm("Excluir esta obrigação?")) return;
+  try { await API.delete(`/api/obrigacoes/${id}`); carregarObrigacoes(); } catch (e) { avisar(e.message); }
+}
+
+/* ---------------- Configurações ---------------- */
+async function carregarConfiguracoes() {
+  try {
+    const cfg = await API.get("/api/administrativo/configuracoes");
+    preencherFormulario(document.getElementById("form-configuracoes"), cfg || {});
+  } catch (e) { avisar(e.message); }
+}
+async function salvarConfiguracoes(ev) {
+  ev.preventDefault();
+  try {
+    await API.postForm("/api/administrativo/configuracoes", new FormData(ev.target), "PUT");
+    avisar("Configurações salvas", "sucesso");
+  } catch (e) { avisar(e.message); }
+}
+</script>
+{% endblock %}

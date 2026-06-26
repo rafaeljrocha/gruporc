@@ -224,3 +224,172 @@ CREATE TABLE IF NOT EXISTS fornecedor (
     ativo INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================================
+-- FASE 2 — Sistema transversal de Projetos + Despesas, Administrativo, Marketing
+-- (todas as tabelas com CREATE TABLE IF NOT EXISTS — idempotentes)
+-- ============================================================================
+
+-- PROJETOS (agrupador de despesas, transversal a todos os módulos)
+CREATE TABLE IF NOT EXISTS projeto (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    modulo_slug TEXT NOT NULL DEFAULT 'secretariado',
+    status TEXT DEFAULT 'aberto',
+    data_inicio DATE,
+    data_fim DATE,
+    orcamento REAL,
+    responsavel TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- MÓDULO ADMINISTRATIVO
+CREATE TABLE IF NOT EXISTS empresa (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    razao_social TEXT NOT NULL,
+    nome_fantasia TEXT,
+    cnpj TEXT,
+    tipo TEXT DEFAULT 'ltda',
+    pais TEXT DEFAULT 'Brasil',
+    estado TEXT,
+    cidade TEXT,
+    endereco TEXT,
+    cep TEXT,
+    email TEXT,
+    telefone TEXT,
+    site TEXT,
+    objeto_social TEXT,
+    capital_social REAL,
+    data_constituicao DATE,
+    data_encerramento DATE,
+    status TEXT DEFAULT 'ativa',
+    observacoes TEXT,
+    logo_path TEXT,
+    ativo INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS socio (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    cpf_passaporte TEXT,
+    tipo_pessoa TEXT DEFAULT 'fisica',
+    empresa_id INTEGER REFERENCES empresa(id),
+    percentual REAL,
+    cargo TEXT,
+    data_entrada DATE,
+    data_saida DATE,
+    ativo INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS contrato (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero TEXT,
+    objeto TEXT NOT NULL,
+    empresa_id INTEGER REFERENCES empresa(id),
+    contraparte TEXT,
+    valor REAL,
+    data_inicio DATE,
+    data_fim DATE,
+    renovacao_automatica INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'vigente',
+    caminho_arquivo TEXT,
+    nome_arquivo TEXT,
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS documento_adm (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER REFERENCES empresa(id),
+    tipo_documento TEXT NOT NULL,
+    descricao TEXT,
+    validade DATE,
+    caminho_arquivo TEXT,
+    nome_arquivo TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS obrigacao (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER REFERENCES empresa(id),
+    descricao TEXT NOT NULL,
+    periodicidade TEXT DEFAULT 'anual',
+    proximo_vencimento DATE,
+    responsavel TEXT,
+    status TEXT DEFAULT 'pendente',
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- MÓDULO MARKETING
+CREATE TABLE IF NOT EXISTS canal_marketing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    plataforma TEXT NOT NULL,
+    url_handle TEXT,
+    seguidores INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'ativo',
+    responsavel TEXT,
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS conteudo_marketing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    canal_id INTEGER REFERENCES canal_marketing(id),
+    formato TEXT,
+    data_prevista DATE,
+    data_publicacao DATE,
+    status TEXT DEFAULT 'ideia',
+    tags TEXT,
+    descricao TEXT,
+    url_publicado TEXT,
+    caminho_arquivo TEXT,
+    nome_arquivo TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS campanha_marketing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    objetivo TEXT,
+    canais TEXT DEFAULT '[]',
+    orcamento REAL,
+    data_inicio DATE,
+    data_fim DATE,
+    status TEXT DEFAULT 'planejada',
+    resultado TEXT,
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS metrica_marketing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    canal_id INTEGER REFERENCES canal_marketing(id),
+    periodo_mes INTEGER,
+    periodo_ano INTEGER,
+    seguidores INTEGER,
+    alcance INTEGER,
+    impressoes INTEGER,
+    engajamento REAL,
+    cliques INTEGER,
+    conversoes INTEGER,
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS arquivo_marketing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    tipo_arquivo TEXT DEFAULT 'outro',
+    descricao TEXT,
+    tags TEXT,
+    caminho_arquivo TEXT,
+    nome_arquivo TEXT,
+    tamanho_bytes INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

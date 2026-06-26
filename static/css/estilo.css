@@ -265,3 +265,39 @@ table.tabela-dados tr:hover { background: #fffafd; }
 
 .barra-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.6rem; }
 .total-destaque { font-weight: bold; font-size: 1.1rem; color: var(--cor-primaria-escura); }
+
+/* ===== Fase 2: badges extras + cards de projeto ===== */
+.badge-roxo { background: #6a1b9a; }
+.badge-laranja { background: var(--cor-alerta); }
+
+.lista-projetos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.vazio { color: #999; font-style: italic; }
+
+.card-projeto {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-left: 4px solid var(--cor-primaria);
+  border-radius: var(--raio);
+  padding: 1rem;
+  box-shadow: var(--sombra);
+}
+.card-projeto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.card-projeto-nome { font-weight: 600; color: var(--cor-primaria-escura); }
+.card-projeto-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.7rem;
+}
+.card-projeto-acoes { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.card-projeto-acoes .botao { padding: 0.35rem 0.7rem; font-size: 0.85rem; }

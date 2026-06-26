@@ -36,10 +36,30 @@ def init_db(config: AppConfig) -> None:
     try:
         conn.executescript(_SCHEMA_PATH.read_text())
         conn.commit()
+        _migrar_colunas_despesa(conn)
+        conn.commit()
         _criar_usuario_master(conn)
         conn.commit()
     finally:
         conn.close()
+
+
+def _migrar_colunas_despesa(conn: sqlite3.Connection) -> None:
+    """Adiciona colunas novas à tabela `despesa` já existente em produção.
+    Migração não-destrutiva e idempotente: ignora coluna que já exista."""
+    colunas_novas = [
+        ("modulo_slug", "TEXT DEFAULT 'secretariado'"),
+        ("projeto_id", "INTEGER REFERENCES projeto(id)"),
+        ("descricao", "TEXT"),
+        ("fornecedor_id", "INTEGER REFERENCES fornecedor(id)"),
+        ("categoria", "TEXT"),
+        ("observacoes", "TEXT"),
+    ]
+    for coluna, definicao in colunas_novas:
+        try:
+            conn.execute(f"ALTER TABLE despesa ADD COLUMN {coluna} {definicao}")
+        except sqlite3.OperationalError:
+            pass  # Coluna já existe — ignorar
 
 
 def _criar_usuario_master(conn: sqlite3.Connection) -> None:
