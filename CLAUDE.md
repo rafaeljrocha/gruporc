@@ -1,51 +1,197 @@
-# CLAUDE.md — Sistema de Administração de Bens Próprios (Grupo Capelato Rocha)
+# CLAUDE.md — SISRITHA (Sistema de Gerenciamento Administrativo do Grupo Ritha Capelato)
 
 > Memória durável do projeto. Leia no início de cada sessão. Trabalhe sempre em **português**.
-> Mantenha este arquivo enxuto (alvo: < 200 linhas). Ao concluir algo relevante, atualize a seção "Estado das fases".
+> Mantenha este arquivo atualizado ao concluir cada fase.
+
+---
 
 ## O que é
-App web de gestão patrimonial (imóveis, locações, veículos, finanças, internacional) usado pelo administrador da holding e por poucos usuários de confiança.
+
+Sistema web de gestão administrativa do Grupo Ritha Capelato, usado pelo master e usuários habilitados.
+URL de produção: **https://sisritha.rafaeljrocha.cloud**
+
+---
 
 ## Stack
-- Flask + SQLite (modo WAL) + gunicorn; bcrypt (senhas); ReportLab (PDFs).
-- Containerizado (Docker); deploy via EasyPanel; Traefik faz proxy/SSL.
-- `DATA_DIR=/data` guarda o banco (`sistema.db`) e **todos** os anexos. Nada de dados fora dali.
-- `app/services/` é a **única** camada que toca o banco.
 
-## Repositório e branches (ATENÇÃO)
-- Repo privado `rafaeljrocha/motociclismo`.
-- A branch `main` contém um scaffold ANTIGO (React "Motoviagem") que **não** é este sistema. O Flask vive nas branches de feature.
-- Cada fase = uma branch + Pull Request. Sempre parta da branch de produção indicada no prompt da fase.
-- **Produção atual: `fase-3d-internacional`.** Em construção: `fase-3f-conectores-ia`.
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | Python 3.12 + Flask 3.0+ |
+| Banco | SQLite3 em `/data/sisritha.db` (modo WAL) |
+| Frontend | Jinja2 + JavaScript Vanilla + HTML5/CSS3 |
+| Auth | bcrypt (senhas) + pyotp (2FA TOTP obrigatório) |
+| Servidor | Gunicorn 23+ com tini |
+| Deploy | Docker → EasyPanel (VPS Hostinger 72.61.42.105) |
+| PDF/Excel | reportlab + openpyxl |
+
+- `DATA_DIR=/data` guarda o banco e **todos** os anexos/uploads. Nada de dados fora dali.
+- `app/services/` é a **única** camada que toca o banco.
+- Tema visual: **rosa** (`--cor-primaria: #e91e8c`) sobre fundo branco/rosê.
+
+---
+
+## Repositório
+
+- Repo privado: `rafaeljrocha/gruporc`
+- Branch de produção: **`main`**
+- Deploy: EasyPanel → serviço `sisritha` → botão "Implantar"
+- Destino no EasyPanel: **HTTP**, porta **8000** (HTTPS no destino causa erro SSL no Gunicorn)
+
+---
+
+## Credenciais iniciais
+
+- Email: `admin@sisritha.local`
+- Senha: `Admin@2025!`
+- Papel: master (acesso total)
+
+---
+
+## Estrutura de arquivos
+
+```
+sisritha/
+├── app/
+│   ├── __init__.py              # create_app() factory + registro de blueprints
+│   ├── auth.py                  # @login_required, @master_required, @api_login_required
+│   ├── config.py                # AppConfig dataclass (lê env vars)
+│   ├── database.py              # init_db(), get_db(), row_to_dict() + migração defensiva
+│   ├── seguranca.py             # rate limiter de login
+│   ├── routes/
+│   │   ├── auth_routes.py       # /login /logout /2fa
+│   │   ├── paginas_routes.py    # rotas HTML + context_processor config_sistema
+│   │   └── api/
+│   │       ├── secretariado_api.py   # CRUD secretariado + usuários + config sistema
+│   │       ├── administrativo_api.py # CRUD administrativo (Fase 2)
+│   │       ├── marketing_api.py      # CRUD marketing (Fase 2)
+│   │       ├── despesas_api.py       # projetos + despesas transversais (Fase 2)
+│   │       └── backup_api.py         # geração de backup
+│   ├── services/                # um arquivo por entidade
+│   └── db/
+│       └── schema.sql           # schema completo (nunca modificar tabelas existentes)
+├── templates/
+│   ├── base.html                # layout base (topo rosa, nav, config_sistema injetado)
+│   ├── login.html
+│   ├── home.html                # cards de módulos
+│   ├── configuracoes.html       # gestão de usuários (master)
+│   ├── configuracoes_sistema.html # logo, nome, dados do sistema (master)
+│   └── modulos/
+│       ├── secretariado/        # index.html + _modais.html
+│       ├── administrativo/      # index.html + _modais.html (Fase 2)
+│       └── marketing/           # index.html + _modais.html (Fase 2)
+├── static/
+│   ├── css/estilo.css
+│   └── js/comum.js              # lerFormulario, formatarBRL, inicializarMascarasMonetarias, API obj
+├── Dockerfile
+├── requirements.txt
+└── wsgi.py
+```
+
+---
+
+## Módulos do sistema
+
+| Slug | Nome | Status | URL |
+|------|------|--------|-----|
+| `secretariado` | Secretariado Executivo | Produção (Fase 1) | `/secretariado` |
+| `administrativo` | Administrativo | Produção (Fase 2) | `/administrativo` |
+| `marketing` | Marketing | Produção (Fase 2) | `/marketing` |
+| `rh` | Recursos Humanos | Fase futura | — |
+| `juridico` | Jurídico | Fase futura | — |
+| `financeiro` | Financeiro | Fase futura | — |
+| `cursos` | Cursos | Fase futura | — |
+
+---
+
+## Tabelas do banco (schema.sql)
+
+**Controle:** schema_migrations, usuario, configuracao, modulo_config
+
+**Secretariado:** integrante, documento_digital, medicamento, consulta, exame, receita_medica, recibo_saude, reembolso, viagem, viagem_passageiro, fornecedor
+
+**Transversal:** despesa (expandida na Fase 2 com: modulo_slug, projeto_id, descricao, fornecedor_id, categoria, observacoes), projeto
+
+**Administrativo:** empresa, socio, contrato, documento_adm, obrigacao
+
+**Marketing:** canal_marketing, conteudo_marketing, campanha_marketing, metrica_marketing, arquivo_marketing
+
+---
 
 ## Regras de ouro (inegociáveis)
-1. **Migrações idempotentes**, controladas por `schema_migrations`: `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN` só após checar. Nunca drop&recreate destrutivo. Preserve dados reais; seguras para rodar a cada reinício.
-2. **Backup antes de cada deploy** (há dados reais em produção).
-3. **Sem senhas**: nenhum campo de senha de portal/serviço. Só link/usuário.
-4. **Mascaramento** via `MASCARA_CAMPOS` em todo export e feed de IA: nunca expor CPF, matrícula completa, dados de pagamento, PII de hóspede, série/registro de arma, senha.
-5. **Armas**: domínio **admin-only**; mascarado nos exports; **excluído por completo dos conectores/feeds de IA**; alertas de registro vão por canal/token **separado**.
-6. **Segurança/UX**: perfis admin/padrão + 2FA (TOTP) + CSRF + sessões intactos. O **master** controla, por perfil, a visibilidade de abas. Mantenha a identidade visual **laranja**.
 
-## Padrões recorrentes
-- **Geração preguiçosa e idempotente** de ocorrências (parcelas de locação; contas a pagar) com `UNIQUE(...)`; **sem cron**.
-- **Motor de pendências** extensível via `registrar_fonte()` — alimenta `/pendencias` e o feed `/api/lembretes`.
-- **Lembretes/integrações**: o app só expõe feeds JSON **só-leitura**, protegidos por token (cabeçalho `X-API-Token`). Agendamento, envio de e-mail e Notion ficam no **n8n**, fora do app. Tokens de env: `LEMBRETES_API_TOKEN`, `LEMBRETES_ARMAS_API_TOKEN` (valores só no EasyPanel; nunca neste arquivo).
-- **Conectores de IA**: token gerado no app e guardado como **hash**; feeds mascarados por escopo; gerência admin-only.
+1. **Migrações idempotentes**: CREATE TABLE IF NOT EXISTS; ALTER TABLE ADD COLUMN apenas após checar existência. Nunca drop&recreate destrutivo.
+2. **Backup antes de cada deploy** (há dados reais em produção).
+3. **Valores monetários**: sempre type="text" data-money="" + inicializarMascarasMonetarias(). Nunca type="number" para campos financeiros.
+4. **Cookies seguros**: COOKIES_SEGUROS=0 enquanto SSL não estiver com certificado válido. Trocar para 1 após cadeado verde.
+5. **Porta interna**: destino no EasyPanel sempre HTTP:8000 — nunca HTTPS interno.
+6. **Tema rosa**: --cor-primaria: #e91e8c. Não usar laranja (pertence ao sistema motociclismo/bens).
+
+---
+
+## Padrões de desenvolvimento
+
+### Service (padrão obrigatório)
+Cada service importa _crud.py e implementa: _normalizar(dados), listar(db_path), criar(db_path, dados), editar(db_path, id_, dados), remover(db_path, id_).
+
+### API Blueprint (padrão obrigatório)
+Blueprint com url_prefix="/api". Todos os endpoints com @api_login_required. Endpoints de configuração com @master_required. Erros retornam {"erro": "mensagem"} com status HTTP correto.
+
+### Webhook N8N (best-effort)
+from app.services.webhook_service import disparar_webhook
+disparar_webhook("tipo_evento", {"dados": ...})
+Falha silenciosa se WEBHOOK_N8N_URL não configurado.
+
+### Upload de arquivo
+from app.services.upload_service import salvar_arquivo
+caminho, nome = salvar_arquivo(arquivo, config.data_dir / "subpasta")
+
+### Abrir arquivo no frontend
+window.open('/data-arquivo?caminho=' + encodeURIComponent(caminho), '_blank');
+
+---
+
+## Variáveis de ambiente (EasyPanel)
+
+| Variável | Valor | Observação |
+|----------|-------|-----------|
+| SECRET_KEY | hex 64 chars | Gerado uma vez, nunca mudar |
+| COOKIES_SEGUROS | 0 | Trocar para 1 após SSL válido |
+| PROXY_FIX | 1 | Necessário atrás do EasyPanel |
+| SESSION_LIFETIME_MIN | 60 | Tempo de sessão em minutos |
+| DATA_DIR | /data | Volume persistente |
+| WEBHOOK_N8N_URL | opcional | URL do webhook N8N |
+
+---
 
 ## Fluxo de deploy (EasyPanel)
-1. Backup (admin → Configurações → Backup).
-2. (Se a fase pedir) cadastrar variáveis em **Ambiente**.
-3. **Origem → aba Github** → trocar **Branch** para a da fase → Salvar (Proprietário `rafaeljrocha`, Repositório `motociclismo`, Caminho `/`).
-4. **Implantações → Deploy**. Conferir nos logs: migração + `Listening at: http://0.0.0.0:8000` + `/healthz` 200.
-- Destino no EasyPanel: **HTTP**, porta **8000** (HTTPS no destino causa Gateway Timeout 504).
-- Rollback: voltar a branch anterior e redeploy (migrações aditivas + backup garantem segurança).
+
+1. Fazer backup: Configurações do Sistema → Backup
+2. Push do código para origin/main
+3. No EasyPanel → serviço sisritha → botão "Implantar"
+4. Acompanhar logs: aguardar "Listening at: http://0.0.0.0:8000"
+5. Verificar /healthz retornando 200
+6. Testar login em https://sisritha.rafaeljrocha.cloud
+
+---
 
 ## Estado das fases
-- **Concluídas e em produção:** 1 (MVP login+Acervo+Locações), 2 (multiusuário/2FA/Docker), 3A (aprimoramentos + export IA), 3B (diligência/pendências), 3B.1 (recibos numerados NN/AAAA), 3B.2 (lembretes via n8n + reajuste manual por contrato), 3C (Fornecedores/Manutenções/Veículos/Armas), 3C.1 (Contas a Pagar + não-renovação + visibilidade de abas por perfil), 3D (Internacional US$/gestor/hóspedes).
-- **Em construção:** 3F (conectores de IA + ajustes: ocultar "Em construção" do padrão; Locações sem "Uso próprio"/"Em construção"; modal fecha no "Salvar") — branch `fase-3f-conectores-ia`.
-- **Bloqueada:** 3E (demonstrativo de IR a inquilinos) — aguarda validação do contador (IRRF / comprovante oficial / DIMOB).
 
-## Como trabalhar (economia de contexto)
-- **Uma fase por sessão.** O prompt de cada fase é autossuficiente (branch + regras + escopo).
-- Implemente **por etapas**, testando, e relate ao final (migrações e como preservam os dados).
-- Ao terminar uma fase, **atualize "Estado das fases"** aqui antes de encerrar/limpar a sessão.
+| Fase | Conteúdo | Status |
+|------|----------|--------|
+| Fase 1 | Login + 2FA TOTP + Módulo Secretariado (7 abas: Cadastro, Saúde, Recibos/Reembolsos, Viagens, Despesas, Fornecedores, Configurações) + Configurações do sistema + Gestão de usuários | Produção |
+| Fase 2 | Módulo Administrativo (Empresas, Sócios, Contratos, Documentos, Obrigações, Despesas, Config) + Módulo Marketing (Canais, Conteúdo, Campanhas, Métricas, Arquivos, Despesas, Config) + Sistema transversal de Despesas por Projeto | Produção |
+| Fase 3 | RH | Planejada |
+| Fase 4 | Jurídico | Planejada |
+| Fase 5 | Financeiro | Planejada |
+| Fase 6 | Cursos | Planejada |
+
+---
+
+## Como trabalhar neste projeto
+
+- Uma fase por sessão. O prompt de cada fase deve ser autossuficiente.
+- Leia este arquivo no início de cada sessão para ter contexto completo.
+- Implemente por etapas, testando localmente com python run.py antes de commitar.
+- Migrações rodam automaticamente no boot via init_db() — sem scripts manuais.
+- Ao concluir uma fase, atualize a tabela "Estado das fases" neste arquivo.
+- Commit sempre para main com mensagem descritiva em português.
